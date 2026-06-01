@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Anarchy Admin — Content Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Patrick+Hand&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Rich Text Editor Toolbar Buttons */
+    .tb-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: #333;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .tb-btn:hover {
+      background: #e0e0e0;
+      border-color: #999;
+    }
+    .tb-btn:active, .tb-btn.active {
+      background: #333;
+      color: #fff;
+      border-color: #333;
+    }
+    /* Placeholder for contenteditable */
+    #fText:empty::before {
+      content: attr(data-placeholder);
+      color: #aaa;
+      font-style: italic;
+      pointer-events: none;
+    }
+    #fText:focus {
+      box-shadow: inset 0 0 0 2px rgba(84, 54, 25, 0.15);
+    }
+    #fText img {
+      cursor: col-resize;
+      transition: outline 0.1s;
+    }
+    #fText img:hover {
+      outline: 3px dashed #8c1c13;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-stamp">A</span>
+      <div>
+        <div class="brand-title">ANARCHY</div>
+        <div class="brand-sub">Content Admin</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-label">SECTIONS</div>
+      <button class="nav-item active" data-section="contents-paper">
+        <span class="nav-icon">📄</span> Work Contents
+      </button>
+      <button class="nav-item" data-section="pdfs-paper">
+        <span class="nav-icon">📑</span> PDFs
+      </button>
+      <button class="nav-item" data-section="presentations-paper">
+        <span class="nav-icon">📊</span> Presentations
+      </button>
+      <button class="nav-item" data-section="videos-paper">
+        <span class="nav-icon">🎬</span> Videos
+      </button>
+      
+      <div class="nav-label" style="margin-top:20px;">SITE CONFIG</div>
+      <button class="nav-item" data-section="settings">
+        <span class="nav-icon">⚙️</span> Settings
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn-export" id="exportBtn">⬇ Export JSON</button>
+      <a href="../index.html" class="btn-preview">↗ View Site</a>
+    </div>
+  </aside>
+
+  <!-- Main Panel -->
+  <main class="main">
+
+    <!-- Header -->
+    <header class="main-header">
+      <div>
+        <h1 class="main-title" id="sectionTitle">Work Contents</h1>
+        <p class="main-sub" id="sectionSub">Manage documents in this section</p>
+      </div>
+      <button class="btn-primary" id="addDocBtn">+ Add Document</button>
+    </header>
+
+    <!-- Document Cards Grid -->
+    <div class="doc-grid" id="docGrid"></div>
+
+    <!-- Empty State -->
+    <div class="empty-state hidden" id="emptyState">
+      <div class="empty-icon">📋</div>
+      <p>No documents yet. Click <strong>+ Add Document</strong> to begin.</p>
+    </div>
+
+    <!-- Settings Form -->
+    <form id="settingsForm" class="hidden modal-form" style="max-width: 600px; background: var(--surface); padding: 30px; border-radius: var(--radius); border: 1px solid var(--border);">
+      <h2 style="margin-bottom:20px; font-family:'Archivo Black', sans-serif;">Homepage Editor</h2>
+      
+      <div class="form-group">
+        <label>Author Tag / Top Label</label>
+        <input type="text" id="sAuthorTag" placeholder="e.g. _ anarchy _">
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label>Main Title (Top Line)</label>
+          <input type="text" id="sTitleTop" placeholder="e.g. The anarchy">
+        </div>
+        <div class="form-group">
+          <label>Main Title (Bottom Line)</label>
+          <input type="text" id="sTitleBottom" placeholder="e.g. files.">
+        </div>
+      </div>
+      
+      <h3 style="margin:20px 0 10px; font-size:1rem; border-bottom:1px solid var(--border); padding-bottom:5px;">Category Names</h3>
+      
+      <div class="form-group">
+        <label>Contents Paper Label</label>
+        <input type="text" id="sCatContents" placeholder="Work Contents">
+      </div>
+      <div class="form-group">
+        <label>PDFs Paper Label</label>
+        <input type="text" id="sCatPdfs" placeholder="PDFs Library">
+      </div>
+      <div class="form-group">
+        <label>Presentations Paper Label</label>
+        <input type="text" id="sCatPresentations" placeholder="Presentations">
+      </div>
+      <div class="form-group">
+        <label>Videos Paper Label</label>
+        <input type="text" id="sCatVideos" placeholder="Videos">
+      </div>
+
+      <h3 style="margin:20px 0 10px; font-size:1rem; border-bottom:1px solid var(--border); padding-bottom:5px;">Intro Letter</h3>
+      
+      <div class="form-group">
+        <label>Letter Heading</label>
+        <input type="text" id="sIntroHeading" placeholder="e.g. Classified.">
+      </div>
+      <div class="form-group">
+        <label>Paragraph 1</label>
+        <textarea id="sIntroP1" rows="3" placeholder="You've found the anarchy files..." style="width:100%; padding:8px; border:1px solid var(--border); border-radius:4px; font-family:inherit;"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Paragraph 2</label>
+        <textarea id="sIntroP2" rows="2" placeholder="Break the grid..." style="width:100%; padding:8px; border:1px solid var(--border); border-radius:4px; font-family:inherit;"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Button Text</label>
+        <input type="text" id="sIntroBtn" placeholder="e.g. Enter The Desk">
+      </div>
+      
+      <h3 style="margin:20px 0 10px; font-size:1rem; border-bottom:1px solid var(--border); padding-bottom:5px;">Intro Gatekeeper</h3>
+      
+      <div class="form-group">
+        <p style="font-size:0.85rem; color: var(--muted, #888); margin-bottom:10px;">
+          The intro only shows on first visit. Use this to preview it again or reset it for all new visitors.
+        </p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button type="button" id="resetIntroBtn" style="padding:8px 16px; background:#c0392b; color:#fff; border:none; border-radius:5px; cursor:pointer; font-size:0.9rem;">
+            🔄 Reset Intro (Show Again)
+          </button>
+          <span id="introStatusBadge" style="padding:8px 14px; border-radius:5px; font-size:0.85rem; background:#eee; color:#555; display:inline-flex; align-items:center;">
+            Checking...
+          </span>
+        </div>
+      </div>
+      
+      <div class="modal-actions" style="margin-top:20px;">
+        <button type="submit" class="btn-primary" id="saveSettingsBtn">Save Settings</button>
+      </div>
+    </form>
+
+  </main>
+
+  <!-- Modal Overlay -->
+  <div class="modal-overlay hidden" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">Add Document</h2>
+        <button class="modal-close" id="modalClose">✕</button>
+      </div>
+
+      <form class="modal-form" id="docForm">
+        <input type="hidden" id="editIndex" value="">
+
+        <div class="form-row" style="grid-template-columns: 1fr 120px 120px;">
+          <div class="form-group">
+            <label>Title <span class="required">*</span></label>
+            <input type="text" id="fTitle" placeholder="e.g. African Markets Case Study" required>
+          </div>
+          <div class="form-group">
+            <label>Short Label <span class="required">*</span></label>
+            <input type="text" id="fShortTitle" placeholder="e.g. Markets" maxlength="12" required>
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <input type="text" id="fCategory" placeholder="e.g. Theory">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Body Text</label>
+          <!-- Rich Text Editor -->
+          <div id="richEditorWrap" style="border: 1px solid #ccc; border-radius: 6px; overflow: hidden; background: #fff;">
+            <!-- Toolbar -->
+            <div id="editorToolbar" style="display: flex; flex-wrap: wrap; gap: 2px; padding: 8px 10px; background: #f4f4f4; border-bottom: 1px solid #ddd; align-items: center;">
+              <!-- Text Style -->
+              <select id="tbHeading" title="Heading" style="padding: 4px 6px; border: 1px solid #ccc; border-radius: 3px; font-size: 0.85rem; cursor: pointer;">
+                <option value="P">Normal</option>
+                <option value="H1">Heading 1</option>
+                <option value="H2">Heading 2</option>
+                <option value="H3">Heading 3</option>
+                <option value="H4">Heading 4</option>
+              </select>
+              <select id="tbFontSize" title="Font Size" style="padding: 4px 6px; border: 1px solid #ccc; border-radius: 3px; font-size: 0.85rem; cursor: pointer;">
+                <option value="3">Normal</option>
+                <option value="1">Small</option>
+                <option value="2">Medium</option>
+                <option value="4">Large</option>
+                <option value="5">X-Large</option>
+                <option value="6">XX-Large</option>
+              </select>
+              <div style="width: 1px; height: 24px; background: #ccc; margin: 0 4px;"></div>
+
+              <!-- Formatting -->
+              <button type="button" class="tb-btn" data-cmd="bold" title="Bold" style="font-weight: bold;">B</button>
+              <button type="button" class="tb-btn" data-cmd="italic" title="Italic" style="font-style: italic;">I</button>
+              <button type="button" class="tb-btn" data-cmd="underline" title="Underline" style="text-decoration: underline;">U</button>
+              <button type="button" class="tb-btn" data-cmd="strikeThrough" title="Strikethrough" style="text-decoration: line-through;">S</button>
+              <div style="width: 1px; height: 24px; background: #ccc; margin: 0 4px;"></div>
+
+              <!-- Highlight & Color -->
+              <label title="Highlight Color" style="position: relative; cursor: pointer;">
+                <span class="tb-btn" style="background: #fdfd96;">🖍</span>
+                <input type="color" id="tbHighlight" value="#fdfd96" style="position: absolute; opacity: 0; width: 0; height: 0;">
+              </label>
+              <label title="Text Color" style="position: relative; cursor: pointer;">
+                <span class="tb-btn">A</span>
+                <input type="color" id="tbTextColor" value="#000000" style="position: absolute; opacity: 0; width: 0; height: 0;">
+              </label>
+              <div style="width: 1px; height: 24px; background: #ccc; margin: 0 4px;"></div>
+
+              <!-- Alignment -->
+              <button type="button" class="tb-btn" data-cmd="justifyLeft" title="Align Left">⫷</button>
+              <button type="button" class="tb-btn" data-cmd="justifyCenter" title="Center">≡</button>
+              <button type="button" class="tb-btn" data-cmd="justifyRight" title="Align Right">⫸</button>
+              <div style="width: 1px; height: 24px; background: #ccc; margin: 0 4px;"></div>
+
+              <!-- Lists & Indent -->
+              <button type="button" class="tb-btn" data-cmd="insertUnorderedList" title="Bullet List">•≡</button>
+              <button type="button" class="tb-btn" data-cmd="insertOrderedList" title="Numbered List">1.</button>
+              <button type="button" class="tb-btn" data-cmd="indent" title="Indent">→]</button>
+              <button type="button" class="tb-btn" data-cmd="outdent" title="Outdent">[←</button>
+              <div style="width: 1px; height: 24px; background: #ccc; margin: 0 4px;"></div>
+
+              <!-- Extras -->
+              <button type="button" class="tb-btn" data-cmd="insertImage" title="Insert Image URL">🖼</button>
+              <label title="Upload Inline Image" style="position: relative; cursor: pointer;">
+                <span class="tb-btn">📤</span>
+                <input type="file" id="inlineImageUpload" accept="image/*" style="position: absolute; opacity: 0; width: 0; height: 0;">
+              </label>
+              <button type="button" class="tb-btn" data-cmd="createLink" title="Insert Link">🔗</button>
+              <button type="button" class="tb-btn" data-cmd="unlink" title="Remove Link">🚫</button>
+              <button type="button" class="tb-btn" data-cmd="insertHorizontalRule" title="Horizontal Line">―</button>
+              <button type="button" class="tb-btn" data-cmd="removeFormat" title="Clear Formatting">✕</button>
+            </div>
+
+            <!-- Editable Area -->
+            <div id="fText" contenteditable="true" spellcheck="true" autocorrect="on" autocapitalize="sentences" style="min-height: 300px; max-height: 600px; overflow-y: auto; padding: 20px; font-family: 'Patrick Hand', cursive, sans-serif; font-size: 1.1rem; line-height: 1.8; outline: none; color: #222; background: #fdfbf7;" data-placeholder="Start writing your document content here..."></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Images</label>
+          <div class="media-input-group">
+            <input type="text" id="imgLinkInput" placeholder="Add image URL...">
+            <button type="button" class="btn-ghost" id="addImgLinkBtn">Add Link</button>
+            <label class="btn-ghost file-upload-btn">
+              Upload File
+              <input type="file" id="imgUpload" accept="image/*" multiple hidden>
+            </label>
+          </div>
+          <div class="media-preview-list" id="imgPreviewList"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Videos</label>
+          <div class="media-input-group">
+            <input type="text" id="vidLinkInput" placeholder="Add video URL...">
+            <button type="button" class="btn-ghost" id="addVidLinkBtn">Add Link</button>
+            <label class="btn-ghost file-upload-btn">
+              Upload File
+              <input type="file" id="vidUpload" accept="video/mp4,video/webm,video/ogg" multiple hidden>
+            </label>
+          </div>
+          <div class="media-preview-list" id="vidPreviewList"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Voice Notes (Audio)</label>
+          <div class="media-input-group">
+            <input type="text" id="audioLinkInput" placeholder="Add audio URL...">
+            <button type="button" class="btn-ghost" id="addAudioLinkBtn">Add Link</button>
+            <label class="btn-ghost file-upload-btn">
+              Upload File
+              <input type="file" id="audioUpload" accept="audio/*" multiple hidden>
+            </label>
+            <button type="button" class="btn-ghost" id="recordAudioBtn" style="color: #ff5252;">🎤 Record</button>
+          </div>
+          <div id="recordingIndicator" style="display: none; color: #ff5252; margin-top: 10px;">Recording in progress... <button type="button" id="stopRecordBtn" class="btn-ghost" style="padding: 2px 8px; border: 1px solid #ff5252; margin-left: 10px;">Stop</button></div>
+          <div class="media-preview-list" id="audioPreviewList"></div>
+        </div>
+
+        <div class="form-group">
+          <label>PDF Attachments</label>
+          <div class="media-input-group">
+            <input type="text" id="pdfLinkInput" placeholder="Add PDF URL...">
+            <button type="button" class="btn-ghost" id="addPdfLinkBtn">Add Link</button>
+            <label class="btn-ghost file-upload-btn">
+              Upload File
+              <input type="file" id="pdfUpload" accept="application/pdf" multiple hidden>
+            </label>
+          </div>
+          <div class="media-preview-list" id="pdfPreviewList"></div>
+        </div>
+
+        <div class="form-group" style="border: 1px dashed rgba(0,0,0,0.1); padding: 15px; border-radius: 6px;">
+          <label>Sticky Notes</label>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <textarea id="stickyInput" rows="2" placeholder="Type your sticky note text... (HTML supported for inline images)" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-family: inherit;"></textarea>
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+              <div>
+                <label style="font-size: 0.85rem; margin-right: 5px;">Color:</label>
+                <select id="stickyColor" style="padding: 4px; border: 1px solid #ccc; border-radius: 4px;">
+                  <option value="#fff8a6">Yellow</option>
+                  <option value="#f4c2d7">Pink</option>
+                  <option value="#80c4e9">Blue</option>
+                  <option value="#a8e6cf">Green</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size: 0.85rem; margin-right: 5px;">Blurred Bg:</label>
+                <input type="file" id="stickyBgUpload" accept="image/*" style="font-size: 0.85rem; max-width: 180px;">
+              </div>
+              <div>
+                <label style="font-size: 0.85rem; margin-right: 5px;">Inline Image:</label>
+                <input type="file" id="stickyInlineUpload" accept="image/*" style="font-size: 0.85rem; max-width: 180px;">
+              </div>
+            </div>
+            <button type="button" class="btn-ghost" id="addStickyBtn" style="align-self: flex-start; margin-top: 5px;">+ Add Sticky Note</button>
+          </div>
+          <div class="media-preview-list" id="stickyPreviewList" style="margin-top: 15px;"></div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" id="cancelBtn">Cancel</button>
+          <button type="submit" class="btn-primary" id="saveBtn">Save Document</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div class="modal-overlay hidden" id="deleteOverlay">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2 class="modal-title">Delete Document?</h2>
+      </div>
+      <p class="delete-msg" id="deleteMsg">This action cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="cancelDeleteBtn">Cancel</button>
+        <button class="btn-danger" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast hidden" id="toast"></div>
+
+  <!-- Appwrite SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.1"></script>
+  <script src="../appwrite-config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

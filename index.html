@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Anarchy Files</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Patrick+Hand&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <!-- Intro Envelope Overlay -->
+  <div id="intro-overlay" class="intro-overlay hidden">
+    <div class="envelope-container" id="envelope-container">
+      <!-- Crumpled ball (initial state) -->
+      <div class="crumpled-paper" id="crumpled-paper"></div>
+      <!-- The letter (unfolded state) -->
+      <div class="letter" id="intro-letter">
+        <!-- Crumple overlay: fades out to reveal flat paper -->
+        <div class="crumple-overlay"></div>
+        <div class="letter-content">
+          <h2 id="intro-heading-el" class="stamp-small" style="text-align: center; margin-bottom: 0.5rem; font-size: 1.6rem; letter-spacing: -1px;">Classified.</h2>
+          <p id="intro-p1-el" class="handwritten" style="font-size: 0.95rem; line-height: 1.4;">You've found the anarchy files. This is a collection of raw thoughts, digital artifacts, and visual rebellion.</p>
+          <p id="intro-p2-el" class="handwritten" style="font-size: 0.95rem; line-height: 1.4; margin-top: 0.5rem;">Break the grid. Touch the paper. Uncover the truth.</p>
+          <div style="text-align: center; margin-top: 1rem;">
+            <button id="enter-site-btn" class="highlight" style="font-size: 1.1rem; padding: 4px 15px; border: none; cursor: pointer; color: #111;">Enter The Desk</button>
+          </div>
+        </div>
+      </div>
+      <div class="click-to-open-text handwritten" id="click-to-open-text">Tap to unfold</div>
+    </div>
+  </div>
+
+  <!-- SVG Filters for procedural paper textures -->
+  <svg width="0" height="0" style="position: absolute;">
+    <!-- Simple crumple for background desk -->
+    <filter id="paperCrumple">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="4" result="noise" />
+      <feDiffuseLighting in="noise" lighting-color="#ffffff" surfaceScale="2" result="light">
+        <feDistantLight azimuth="45" elevation="60" />
+      </feDiffuseLighting>
+      <feBlend mode="multiply" in="SourceGraphic" in2="light" />
+    </filter>
+
+    <!-- Combined Torn Edges + Crumple Crumble for reading pages and mini-pages -->
+    <filter id="parchment-filter">
+      <!-- 1. Organic Ragged Edges -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="distortNoise" />
+      <feDisplacementMap in="SourceGraphic" in2="distortNoise" scale="12" xChannelSelector="R" yChannelSelector="G" result="displaced" />
+      
+      <!-- 2. Internal Paper Creasing/Crumple -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="4" result="crumpleNoise" />
+      <feDiffuseLighting in="crumpleNoise" lighting-color="#ffffff" surfaceScale="1.8" result="light">
+        <feDistantLight azimuth="45" elevation="55" />
+      </feDiffuseLighting>
+      
+      <!-- 3. Multiply blend -->
+      <feBlend mode="multiply" in="displaced" in2="light" />
+    </filter>
+  </svg>
+
+  <div class="desk">
+    <div class="clipboard">
+
+      <div class="paper-stack">
+        <!-- Background paper layers for depth -->
+        <div class="paper-layer layer-1"></div>
+        <div class="paper-layer layer-2"></div>
+        <div class="paper-layer layer-3"></div>
+        <div class="paper-layer layer-4"></div>
+        <!-- Paperclip — fixed to the stack, clips all pages together -->
+        <div class="paperclip-wrapper">
+          <svg class="paperclip" viewBox="0 0 20 80" width="22" height="85">
+            <path d="M 16,30 V 65 A 6,6 0 0 1 4,65 V 15 A 4,4 0 0 1 12,15 V 55 A 2,2 0 0 1 8,55 V 25" fill="none"
+              stroke="#888" stroke-width="2.5" stroke-linecap="round"
+              style="filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.4));" />
+          </svg>
+        </div>
+
+        <!-- Top Paper: MAIN MENU -->
+        <div class="top-paper paper-active" id="menu-paper">
+
+          <div class="author-tag">
+            <span class="handwritten" id="dyn-author">_ anarchy _</span>
+          </div>
+
+          <div class="title-wrapper">
+            <svg class="star" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <path d="M50 5 L60 38 L95 38 L65 58 L75 90 L50 70 L25 90 L35 58 L5 38 L40 38 Z" fill="#cbf511" />
+            </svg>
+            <h1 class="stamp">
+              <span id="dyn-titleTop">The anarchy</span><br>
+              <span class="stamp-right" id="dyn-titleBottom">files.</span>
+            </h1>
+          </div>
+
+          <div class="nav-links">
+            <div class="nav-item">
+              <a href="#contents" class="highlight nav-btn" data-target="contents-paper">Work Contents</a>
+            </div>
+            <div class="nav-item">
+              <a href="#pdfs" class="blue-ink nav-btn" data-target="pdfs-paper">PDFs Library</a>
+            </div>
+            <div class="nav-item">
+              <a href="#presentations" class="highlight nav-btn" data-target="presentations-paper">Presentations</a>
+            </div>
+            <div class="nav-item">
+              <a href="#videos" class="blue-ink nav-btn" data-target="videos-paper">Videos</a>
+            </div>
+            <div class="nav-item" style="margin-top: 15px;">
+              <a href="#" class="highlight" id="actionModalBtn" style="background-color: #ff5722; color: #fff; border-radius: 8px; padding: 6px 16px;">Let's take action together</a>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Content Paper: WORK CONTENTS -->
+        <div class="top-paper paper-hidden" id="contents-paper">
+          <div class="paper-header">
+            <a href="#" class="blue-ink back-btn">&lt;- back to menu</a>
+          </div>
+          <h2 class="stamp-small" style="font-size: 2.8rem; margin-bottom: 1rem; letter-spacing: -1px;">Work Contents</h2>
+          
+          <!-- Search & Filter Controls -->
+          <div class="search-filter-controls">
+            <input type="text" id="contents-search" class="paper-search-input" placeholder="🔍 Search documents...">
+            <div class="category-filters" id="contents-categories"></div>
+          </div>
+
+          <div class="paper-content handwritten">
+            <p>1. The State of Design (Draft)</p>
+            <p>2. African Markets Case Study</p>
+            <p>3. UX Research Notes</p>
+            <p>4. Typography Experiments</p>
+          </div>
+        </div>
+
+        <!-- Content Paper: PDFS -->
+        <div class="top-paper paper-hidden" id="pdfs-paper">
+          <div class="paper-header">
+            <a href="#" class="blue-ink back-btn">&lt;- back to menu</a>
+          </div>
+          <h2 class="stamp-small" style="font-size: 2.8rem; margin-bottom: 1rem; letter-spacing: -1px;">PDF Library</h2>
+          
+          <!-- Search Control -->
+          <div class="search-filter-controls">
+            <input type="text" id="pdfs-search" class="paper-search-input" placeholder="🔍 Search PDFs...">
+          </div>
+
+          <div class="paper-content handwritten">
+            <!-- Dynamically populated by script.js -->
+          </div>
+        </div>
+
+        <!-- Content Paper: PRESENTATIONS -->
+        <div class="top-paper paper-hidden" id="presentations-paper">
+          <div class="paper-header">
+            <a href="#" class="blue-ink back-btn">&lt;- back to menu</a>
+          </div>
+          <h2 class="stamp-small" style="font-size: 2.8rem; margin-bottom: 1.5rem; letter-spacing: -1px;">Presentations
+          </h2>
+          <div class="paper-content handwritten">
+            <p>📊 The African Renaissance Deck</p>
+            <p>📊 Q3 Investor Pitch</p>
+            <p>📊 Design Sprint Workshop</p>
+          </div>
+        </div>
+
+        <!-- Content Paper: VIDEOS -->
+        <div class="top-paper paper-hidden" id="videos-paper">
+          <div class="paper-header">
+            <a href="#" class="blue-ink back-btn">&lt;- back to menu</a>
+          </div>
+          <h2 class="stamp-small" style="font-size: 2.8rem; margin-bottom: 1.5rem; letter-spacing: -1px;">Videos</h2>
+          <div class="paper-content handwritten">
+            <p>▶ Keynote Speech 2025</p>
+            <p>▶ Workshop: Design Thinking</p>
+            <p>▶ Anarchy Brand Reveal</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Fullscreen Parchment Reading View (Procedurally Generated!) -->
+  <div id="parchment-view" class="parchment-overlay hidden">
+    <!-- Minimized Navigation Sidebar — no wrapper frame, just bare mini-pages -->
+    <div class="parchment-sidebar" id="parchment-sidebar"></div>
+
+    <div class="parchment-container">
+      <!-- Procedural Distressed Paper Background -->
+      <div class="parchment-bg"></div>
+
+      <!-- Close Button -->
+      <button class="parchment-close" id="close-parchment">X</button>
+      
+      <!-- Content Area -->
+      <div class="parchment-content" id="parchment-text">
+        <h2 class="stamp-small" style="text-align: center; margin-bottom: 2rem;">The Document</h2>
+        <p class="handwritten">This document has been fully generated by code without using any image file!</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Action Modal for All Sticky Notes & Voice Notes -->
+  <div id="action-modal" class="parchment-overlay hidden">
+    <div class="parchment-container" style="max-width: 800px; padding: 20px;">
+      <div class="parchment-bg"></div>
+      <button class="parchment-close" id="close-action-modal">X</button>
+      <div class="parchment-content" style="padding: 8% 8% 8% 10%;">
+        <h2 class="stamp-small" style="text-align: center; margin-bottom: 2rem;">Take Action Together</h2>
+        
+        <div style="margin-bottom: 3rem;">
+          <h3 class="handwritten" style="font-size: 2.2rem; border-bottom: 2px dashed rgba(84, 54, 25, 0.35); padding-bottom: 10px;">All Voice Notes</h3>
+          <div id="all-voice-notes" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;"></div>
+        </div>
+
+        <div>
+          <h3 class="handwritten" style="font-size: 2.2rem; border-bottom: 2px dashed rgba(84, 54, 25, 0.35); padding-bottom: 10px;">All Sticky Notes</h3>
+          <div id="all-sticky-notes" style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 25px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Zoom Modal for Interactive Sticky Notes -->
+  <div id="sticky-zoom-modal" class="parchment-overlay hidden" style="z-index: 2000; cursor: zoom-out;">
+    <div id="zoomed-sticky-container" style="transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; transform-style: preserve-3d; position: relative;">
+      <!-- Sticky note clone goes here -->
+    </div>
+  </div>
+
+  <!-- Zoom Modal for Images -->
+  <div id="image-zoom-modal" class="parchment-overlay hidden" style="z-index: 2100; cursor: zoom-out; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: rgba(0,0,0,0.85);">
+    <div id="zoomed-image-container" style="position: relative; max-width: 90vw; max-height: 70vh;">
+      <img id="zoomed-image-el" src="" alt="Zoomed" style="max-width: 100%; max-height: 70vh; border: 8px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-radius: 2px;">
+    </div>
+    <div id="zoomed-image-details" style="margin-top: 25px; background: #fdfbf7; padding: 20px 30px; border: 2px dashed rgba(84, 54, 25, 0.35); box-shadow: 0 5px 15px rgba(0,0,0,0.4); max-width: 80vw; max-height: 20vh; overflow-y: auto; text-align: center; border-radius: 4px; transform: rotate(-1deg);">
+      <h3 id="zoomed-image-title" class="stamp-small" style="font-size: 1.8rem; margin-bottom: 10px; color: #1a1a1a;"></h3>
+      <div id="zoomed-image-text" class="handwritten" style="font-size: 1.3rem; color: #333; line-height: 1.5;"></div>
+    </div>
+  </div>
+
+  <!-- PDF View Modal -->
+  <div id="pdf-modal" class="parchment-overlay hidden" style="z-index: 2500; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.85);">
+    <button id="close-pdf-modal" style="position: absolute; top: 20px; right: 30px; background: transparent; border: none; font-size: 2rem; color: #f6efe1; cursor: pointer; font-family: 'Patrick Hand', cursive;">✕ Close</button>
+    
+    <div style="width: 90%; max-width: 900px; height: 85vh; background: #fdfbf7; border: 2px solid #543619; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; position: relative;">
+      
+      <!-- Tape effect on top corners -->
+      <div style="position: absolute; top: -10px; left: -15px; width: 80px; height: 25px; background: rgba(255,255,255,0.5); transform: rotate(-45deg); box-shadow: 1px 1px 3px rgba(0,0,0,0.1);"></div>
+      <div style="position: absolute; top: -10px; right: -15px; width: 80px; height: 25px; background: rgba(255,255,255,0.5); transform: rotate(45deg); box-shadow: 1px 1px 3px rgba(0,0,0,0.1);"></div>
+
+      <div style="flex-grow: 1; border: 2px dashed #bbb; overflow: hidden; position: relative; background: #fff;">
+        <embed id="pdf-modal-embed" src="" type="application/pdf" width="100%" height="100%">
+      </div>
+
+      <div style="display: flex; justify-content: center; padding-top: 25px; padding-bottom: 5px;">
+        <button id="pdf-modal-download-btn" class="highlight" style="background-color: #ff5722; color: white; border: 2px solid #543619; cursor: pointer; padding: 12px 30px; font-family: 'Special Elite', monospace; font-size: 1.5rem; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); border-radius: 4px; box-shadow: 4px 6px 0 #543619; position: relative; overflow: hidden;">
+          <span style="position: relative; z-index: 2; pointer-events: none;">[ EXFILTRATE DATA ]</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- Appwrite SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.1"></script>
+  <script src="appwrite-config.js"></script>
+  <script src="script.js"></script>
+</body>
+
+</html>

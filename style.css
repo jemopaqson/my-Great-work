@@ -1,0 +1,1058 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: sans-serif;
+}
+
+.desk {
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+/* Pseudo-element creates the cream crumpled background */
+.desk::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: #f6efe1; /* Beautiful Cream Color */
+  filter: url(#paperCrumple);
+  z-index: 0;
+}
+
+.clipboard {
+  width: 100%;
+  max-width: 520px; /* Reduced to balance size */
+  height: 82vh; /* Reduced height */
+  min-height: 550px;
+  max-height: 720px; /* Reduced max height */
+  background: transparent;
+  position: relative;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+}
+
+/* 
+  Paper Stack 
+*/
+.paper-stack {
+  position: relative;
+  width: 92%;
+  height: 90%;
+  margin: 5% auto 0;
+  z-index: 10;
+  perspective: 2000px;
+}
+
+.paper-layer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fdfbf7;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.layer-1 {
+  background-color: #b5926b; /* Burlap fallback color */
+  background-image: url('burlap.png'); /* The material image */
+  background-size: cover;
+  background-position: center;
+  transform: rotate(-4deg) translate(-5px, 12px);
+  border-radius: 4px; /* Soften edges slightly for fabric */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+.layer-2 {
+  background: #f4f4f4;
+  transform: rotate(3deg) translate(8px, -5px);
+  background-image: linear-gradient(0deg, transparent 95%, #e0e0e0 95%);
+  background-size: 100% 20px;
+}
+.layer-3 {
+  background: #e8e5df;
+  transform: rotate(-1.5deg) translate(-2px, 5px);
+}
+.layer-4 {
+  background: white;
+  transform: rotate(2deg) translate(10px, 15px);
+  background-image: 
+    linear-gradient(#e5e5e5 1px, transparent 1px),
+    linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Top paper base styling */
+.top-paper {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #f4f1ea;
+  /* Dotted grid + subtle paper grain overlay */
+  background-image: 
+    radial-gradient(#999 1.5px, transparent 1.5px),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+  background-size: 24px 24px, 100% 100%;
+  background-position: 0 0;
+  box-shadow: -2px 5px 15px rgba(0,0,0,0.15);
+  padding: 2.5rem 3rem; /* Increased padding for bigger paper */
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; /* Allows content to scroll if it gets too long */
+  
+  /* 3D Animation properties */
+  transition: transform 0.8s cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.3s ease, opacity 0.5s ease;
+  transform-origin: left center;
+  transform-style: preserve-3d;
+}
+
+/* Custom minimal scrollbar for papers */
+.top-paper::-webkit-scrollbar {
+  width: 6px;
+}
+.top-paper::-webkit-scrollbar-track {
+  background: transparent;
+}
+.top-paper::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border-radius: 4px;
+}
+
+/* Hover effect */
+.top-paper.paper-active:hover {
+  transform: translateY(-5px) scale(1.01) rotateZ(1deg);
+  box-shadow: -8px 15px 25px rgba(0,0,0,0.2);
+  cursor: grab;
+}
+
+/* Paper Animation States */
+.paper-active {
+  transform: rotateY(0deg) translate(0, 0) rotate(0);
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 6;
+}
+
+.paper-hidden {
+  transform: translate(10px, 30px) rotateZ(3deg);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.paper-out {
+  /* Real-world page turn: flip it over to the left */
+  transform: rotateY(-130deg) translateZ(50px) rotateZ(-5deg);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 7;
+}
+
+/* Content Paper Specific Styles */
+.paper-header {
+  margin-bottom: 2rem;
+}
+
+.paper-content {
+  font-size: 1.4rem;
+  line-height: 1.8;
+  color: #333;
+}
+
+.paper-content p {
+  border-bottom: 1px dashed #ccc;
+  padding: 0.6rem 0;
+  cursor: pointer;
+  transition: color 0.2s, padding-left 0.2s;
+}
+
+.paper-content p:hover {
+  color: #1a4a8d;
+  padding-left: 10px;
+}
+
+/* Paperclip — sits on the paper-stack, above all papers */
+.paperclip-wrapper {
+  position: absolute;
+  top: -20px;
+  left: 20%;
+  z-index: 50; /* Above all papers (paper z-index max is ~7) */
+  pointer-events: none; /* Don't block clicks on papers underneath */
+}
+
+/* Handwritten / Typographic Elements */
+.author-tag {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.handwritten {
+  font-family: 'Patrick Hand', cursive;
+  font-size: clamp(1.4rem, 4vw, 1.8rem);
+  color: #333;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1.5px;
+}
+
+.title-wrapper {
+  position: relative;
+  margin-top: 5rem;
+}
+
+.stamp {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(2.8rem, 8vw, 4rem);
+  line-height: 0.9;
+  color: #1a1a1a;
+  letter-spacing: -2px;
+  text-transform: none; /* Image is "The design files." */
+  text-shadow: 0px 0px 1px rgba(0,0,0,0.3);
+}
+
+.stamp-right {
+  display: block;
+  text-align: right;
+  padding-right: 0.5rem;
+}
+
+.star {
+  position: absolute;
+  right: 15px;
+  top: 45px;
+  width: 45px;
+  height: 45px;
+  transform: rotate(15deg);
+  opacity: 0.9;
+  z-index: 10;
+}
+
+/* Navigation links inside paper */
+.nav-links {
+  margin-top: 5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.nav-item {
+  text-align: center;
+}
+
+.highlight {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.6rem;
+  color: #111;
+  background-color: #dfff22;
+  padding: 2px 12px;
+  border-radius: 4px 8px 6px 3px;
+  text-decoration: none;
+  display: inline-block;
+  transform: rotate(-1deg);
+  transition: transform 0.2s;
+}
+
+.highlight:hover {
+  transform: rotate(1deg) scale(1.05);
+}
+
+.blue-ink {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.6rem;
+  color: #1a4a8d;
+  text-decoration: none;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.blue-ink:hover {
+  transform: scale(1.05);
+}
+
+/* Clipboard Bottom Text */
+.clipboard-bottom {
+  position: absolute;
+  bottom: 25px;
+  width: 100%;
+  text-align: center;
+}
+
+.stamp-small {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: clamp(2.2rem, 6vw, 3rem);
+  color: #1a1a1a;
+  letter-spacing: -1px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 500px) {
+  .top-paper {
+    padding: 1.5rem 1.5rem;
+  }
+  .star {
+    width: 35px;
+    height: 35px;
+    top: 35px;
+  }
+  .nav-links {
+    margin-top: 3rem;
+  }
+}
+
+/* 
+  Parchment Reading View (Procedurally Skeuomorphic!)
+*/
+.parchment-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background-color: rgba(0,0,0,0.85);
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 20px; /* Space between sidebar and main sheet */
+  z-index: 1000;
+  opacity: 1;
+  transition: opacity 0.4s ease, backdrop-filter 0.4s ease;
+  backdrop-filter: blur(5px);
+  padding: 0 20px; /* Keep mini-pages from hitting screen edge */
+}
+
+.parchment-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+  backdrop-filter: blur(0px);
+}
+
+.parchment-container {
+  width: 95vw;
+  max-width: 600px;
+  height: 90vh;
+  max-height: 850px;
+  background: transparent; /* Container is transparent to let ragged-bg show */
+  position: relative;
+  box-shadow: 0 15px 50px rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Procedural Ragged Burnt Parchment Background */
+.parchment-bg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  
+  /* Textured cream paper colors */
+  background-color: #f6efe1; /* Beautiful Cream Base */
+  background-image: 
+    radial-gradient(circle at 50% 50%, #fdfbf7 0%, #f6efe1 100%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+  background-blend-mode: multiply;
+
+  /* Apply the organic distortion filter to create torn edges + crumpled creases! */
+  filter: url(#parchment-filter);
+  z-index: 1;
+}
+
+/* Distressed hand-drawn inner margin border */
+.parchment-bg::after {
+  content: '';
+  position: absolute;
+  top: 20px; left: 20px; right: 20px; bottom: 20px;
+  border: 1.5px solid rgba(84, 54, 25, 0.35);
+  pointer-events: none;
+}
+
+.parchment-content {
+  position: relative;
+  z-index: 5; /* Keep content above the procedural background */
+  color: #2b1f13; /* Dark brown ink */
+  line-height: 1.6;
+  overflow-y: auto;
+  overflow-x: hidden; /* Disable horizontal scrolling */
+  word-wrap: break-word;
+  flex-grow: 1;
+  padding: 12% 10% 10% 12%;
+}
+
+.parchment-content .handwritten {
+  text-decoration: none !important;
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+  line-height: 1.7;
+}
+
+.parchment-content .handwritten img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 15px 0;
+  display: block;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 1px solid rgba(84, 54, 25, 0.15);
+}
+
+.mt-3 {
+  margin-top: 1.5rem;
+}
+
+.parchment-content::-webkit-scrollbar {
+  width: 4px;
+}
+.parchment-content::-webkit-scrollbar-thumb {
+  background: rgba(43, 31, 19, 0.2);
+  border-radius: 4px;
+}
+
+.parchment-close {
+  position: absolute;
+  top: 30px;
+  right: 35px;
+  background: none;
+  border: none;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 2.5rem;
+  color: #2b1f13;
+  cursor: pointer;
+  transition: transform 0.2s, color 0.2s;
+  z-index: 10; /* Above everything */
+}
+
+.parchment-close:hover {
+  transform: scale(1.2);
+  color: #8c1c13; /* Red ink close action */
+}
+
+/* 
+  Skeuomorphic Sidebar Navigation (Minimized Pages)
+  The sidebar is completely frameless — no background, border, outline, or shadow.
+  Only the individual mini-page squares are visible.
+*/
+.parchment-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 10;
+  flex-shrink: 0;
+  /* Completely invisible container */
+  background: none;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  /* No overflow clipping at all — let filter edges paint freely */
+  overflow: visible;
+  padding: 10px 0;
+}
+
+.mini-page {
+  width: 75px;
+  height: 85px;
+  background-color: #f6efe1; /* Beautiful Cream Base */
+  background-image: 
+    radial-gradient(circle at 50% 50%, #fdfbf7 0%, #f6efe1 100%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.08' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+  background-blend-mode: multiply;
+  
+  /* Torn edges + crumple — the filter itself creates the natural boundary, no frame needed */
+  filter: url(#parchment-filter) drop-shadow(1px 3px 5px rgba(0,0,0,0.4));
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px;
+  transition: transform 0.2s, filter 0.2s;
+  border: none; /* No rectangular frame — ragged filter edges define the shape */
+  border-radius: 0;
+  outline: none;
+}
+
+.mini-page:hover {
+  transform: scale(1.1) rotate(-3deg);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.mini-page.active {
+  transform: scale(1.15) rotate(3deg);
+  /* Active page: red ink glow only — no rectangular border frame */
+  filter: url(#parchment-filter) drop-shadow(0 0 8px rgba(140, 28, 19, 0.7)) drop-shadow(1px 3px 6px rgba(0,0,0,0.5));
+}
+
+.mini-title {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.05rem;
+  color: #2b1f13;
+  text-align: center;
+  line-height: 1.1;
+  pointer-events: none;
+  font-weight: bold;
+}
+
+/* Embedded Media Elements inside Parchment Content */
+.embedded-image-container, .embedded-video-container {
+  margin: 2rem 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+  width: 100%;
+}
+
+.embedded-image {
+  width: 90%;
+  max-width: 320px;
+  height: auto;
+  border: 8px solid #fff;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+  transform: rotate(-1.5deg);
+  display: block;
+  cursor: zoom-in;
+}
+
+/* Skeuomorphic Scotch Tape on photo corners */
+.embedded-image-container::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 15%;
+  width: 70px;
+  height: 25px;
+  background-color: rgba(244, 240, 220, 0.5); /* semi-transparent tape */
+  backdrop-filter: blur(1px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transform: rotate(-30deg);
+  border-left: 2px dashed rgba(0,0,0,0.08);
+  border-right: 2px dashed rgba(0,0,0,0.08);
+  z-index: 3;
+}
+
+.embedded-image-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0px;
+  right: 15%;
+  width: 70px;
+  height: 25px;
+  background-color: rgba(244, 240, 220, 0.5);
+  backdrop-filter: blur(1px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transform: rotate(-25deg);
+  border-left: 2px dashed rgba(0,0,0,0.08);
+  border-right: 2px dashed rgba(0,0,0,0.08);
+  z-index: 3;
+}
+
+.embedded-video {
+  width: 95%;
+  max-width: 380px;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  border: 1px solid rgba(0,0,0,0.15);
+}
+
+.caption {
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.2rem;
+  color: #554433;
+  margin-top: 0.8rem;
+  text-align: center;
+  text-decoration: none !important;
+}
+
+/* Multiple-image scattered polaroid gallery */
+.photo-gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px 16px;
+  margin: 2rem 0;
+  padding: 8px;
+  width: 100%;
+}
+
+.polaroid {
+  background: #fff;
+  padding: 8px 8px 28px 8px; /* Extra bottom = polaroid label area */
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.polaroid:hover {
+  transform: scale(1.06) rotate(0deg) !important; /* Straighten + lift on hover */
+  box-shadow: 0 14px 30px rgba(0,0,0,0.28);
+  z-index: 5;
+}
+
+/* Scotch tape strip on top of each polaroid */
+.polaroid::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-3deg);
+  width: 52px;
+  height: 20px;
+  background-color: rgba(244, 240, 210, 0.6);
+  backdrop-filter: blur(1px);
+  border-left: 1px dashed rgba(0,0,0,0.07);
+  border-right: 1px dashed rgba(0,0,0,0.07);
+  z-index: 3;
+}
+
+.polaroid-img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  display: block;
+  cursor: zoom-in;
+}
+
+/* Responsive sidebars */
+@media (max-width: 768px) {
+  .parchment-overlay {
+    flex-direction: column-reverse;
+    padding: 1rem;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .parchment-sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: visible;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    padding: 8px 4px;
+    width: 100%;
+  }
+
+  .parchment-sidebar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .mini-page {
+    width: 60px;
+    height: 70px;
+    flex-shrink: 0;
+  }
+
+  .mini-title {
+    font-size: 0.85rem;
+  }
+
+  .parchment-content {
+    padding: 12% 10% 10% 12%;
+  }
+}
+
+/* ─── Search & Filter Controls — Parchment-Style ────────────────────────── */
+.search-filter-controls {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.paper-search-input {
+  width: 100%;
+  border: none;
+  border-bottom: 2px dashed rgba(84, 54, 25, 0.35);
+  background: transparent;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.4rem;
+  color: #2b1f13;
+  padding: 6px 0;
+  outline: none;
+  transition: border-bottom-color 0.2s;
+}
+
+.paper-search-input:focus {
+  border-bottom: 2px dashed rgba(84, 54, 25, 0.7);
+}
+
+.paper-search-input::placeholder {
+  color: rgba(84, 54, 25, 0.45);
+}
+
+.category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.filter-tag {
+  background: rgba(84, 54, 25, 0.05);
+  border: 1px solid rgba(84, 54, 25, 0.18);
+  padding: 4px 12px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.15rem;
+  color: #543619;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.filter-tag:nth-child(even) {
+  transform: rotate(-1.5deg);
+}
+
+.filter-tag:nth-child(odd) {
+  transform: rotate(1deg);
+}
+
+.filter-tag:hover, .filter-tag.active {
+  background: #543619;
+  color: #f6efe1;
+  border-color: #543619;
+  transform: scale(1.05) rotate(0deg);
+  box-shadow: 1px 3px 6px rgba(0,0,0,0.1);
+}
+
+/* ─── Stacked Sticky Notes (Based on Reference) ────────────────────────── */
+.sticky-note-wrapper {
+  position: relative;
+  width: 170px;
+  height: 170px;
+  margin: 15px;
+  cursor: pointer;
+  transition: transform 0.2s ease, z-index 0s;
+  /* Slightly organic drop shadow for the whole stack */
+  filter: drop-shadow(4px 8px 10px rgba(0,0,0,0.15));
+}
+
+.sticky-note-wrapper:hover {
+  transform: scale(1.05) translateY(-5px);
+  z-index: 50;
+}
+
+/* Base layer for all sheets */
+.sticky-layer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border-radius: 2px;
+  /* subtle internal texture */
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  filter: url(#paperCrumple);
+}
+
+/* Bottom Pink Layer */
+.sticky-pink {
+  background-color: #f4c2d7; 
+  transform: rotate(-6deg) translate(-5px, -2px);
+  z-index: 1;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.02), 2px 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Middle Blue Layer */
+.sticky-blue {
+  background-color: #80c4e9;
+  transform: rotate(8deg) translate(3px, 5px);
+  z-index: 2;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.02), 2px 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Top Yellow Layer */
+.sticky-yellow {
+  background-color: #fff8a6;
+  transform: rotate(-1deg);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 15px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.3rem;
+  color: #333;
+  word-wrap: break-word;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.02), 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Paper curl effect on the top note */
+.sticky-yellow::after {
+  content: "";
+  position: absolute;
+  bottom: 8px;
+  left: 5px;
+  width: 40%;
+  height: 20px;
+  box-shadow: -4px 10px 10px rgba(0,0,0,0.3);
+  transform: rotate(-6deg);
+  z-index: -1;
+}
+
+/* Red Pin (Tilted 3D Look matching reference) */
+.sticky-pin {
+  position: absolute;
+  top: -12px;
+  left: 45%;
+  width: 26px;
+  height: 20px;
+  background: radial-gradient(circle at 10px 6px, #ff8a8a, #e53935 50%, #b71c1c);
+  border-radius: 50%;
+  z-index: 10;
+  pointer-events: none;
+  transform: rotate(-35deg); /* Tilt */
+  box-shadow: 2px 4px 6px rgba(0,0,0,0.5);
+  transform-style: preserve-3d;
+}
+
+/* Red Pin - Stem */
+.sticky-pin::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: 7px;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(to right, #7f0000, #e53935 40%, #7f0000);
+  border-radius: 0 0 4px 4px;
+  z-index: -1;
+  transform: translateZ(-1px);
+}
+
+/* Red Pin - Needle */
+.sticky-pin::after {
+  content: '';
+  position: absolute;
+  top: 25px;
+  left: 11.5px;
+  width: 3px;
+  height: 20px;
+  background: linear-gradient(to right, #666, #fff 50%, #444);
+  border-radius: 0 0 2px 2px;
+  z-index: -2;
+  transform: translateZ(-2px);
+  /* Long drop shadow down and left */
+  box-shadow: 3px 8px 5px rgba(0,0,0,0.4); 
+}
+
+/* ─── Intro Envelope overlay ─── */
+.intro-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background-color: #111; /* Dark background */
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.8s ease;
+}
+
+.intro-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.intro-overlay.gone {
+  display: none;
+}
+
+.envelope-container {
+  position: relative;
+  width: 500px;
+  max-width: 90vw;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  cursor: pointer;
+  perspective: 1200px;
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ── Crumpled ball (initial visible state) ── */
+.crumpled-paper {
+  position: absolute;
+  width: 70%;
+  height: 70%;
+  background: url('cruble-removebg-preview.png') center/contain no-repeat;
+  z-index: 5;
+  filter: drop-shadow(0 15px 30px rgba(0,0,0,0.6));
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: rotate(0deg) scale(1);
+  animation: float-crumple 4s ease-in-out infinite;
+}
+
+@keyframes float-crumple {
+  0%   { transform: translateY(0)     rotate(-2deg); }
+  50%  { transform: translateY(-15px) rotate(2deg);  }
+  100% { transform: translateY(0)     rotate(-2deg); }
+}
+
+/* ── The letter (hidden until unfolded) ── */
+.letter {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: url('unfoldcrumble.jpg') center/cover no-repeat;
+  border-radius: 3px;
+  z-index: 2;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.15);
+  transform-style: preserve-3d;
+}
+
+/* ── Crumple overlay — sits on top of the flat paper ── */
+.crumple-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: url('cruble-removebg-preview.png') center/cover no-repeat;
+  z-index: 3;
+  opacity: 1;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+/* ── Letter content (text) ── */
+.letter-content {
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 0.8s ease 0.3s;
+  z-index: 4;
+  width: 55%;
+  max-width: 300px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ═══════════════════════════════════════════════
+   OPEN STATE — The uncrumpling sequence
+   ═══════════════════════════════════════════════ */
+
+/* Step 1: Crumpled ball implodes inward */
+.envelope-container.is-open .crumpled-paper {
+  animation: ball-implode 0.5s cubic-bezier(0.6, 0, 1, 0.4) forwards;
+}
+
+@keyframes ball-implode {
+  0%   { transform: scale(1) rotate(0deg);   opacity: 1; filter: drop-shadow(0 15px 30px rgba(0,0,0,0.6)); }
+  50%  { transform: scale(1.15) rotate(10deg); opacity: 1; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8)); }
+  100% { transform: scale(0) rotate(180deg);  opacity: 0; filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+}
+
+/* Step 2: Letter emerges — starts crumpled, unfolds flat */
+.envelope-container.is-open .letter {
+  opacity: 1;
+  z-index: 10;
+  cursor: pointer;
+  pointer-events: auto;
+  animation: paper-unfold 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s forwards;
+}
+
+@keyframes paper-unfold {
+  0% {
+    transform: scale(0.15) rotateX(90deg) rotateZ(-30deg);
+    opacity: 0;
+    filter: brightness(0.3) drop-shadow(0 2px 4px rgba(0,0,0,0.9));
+    border-radius: 40%;
+  }
+  25% {
+    transform: scale(0.4) rotateX(60deg) rotateZ(-15deg);
+    opacity: 1;
+    filter: brightness(0.5) drop-shadow(0 8px 16px rgba(0,0,0,0.7));
+    border-radius: 20%;
+  }
+  50% {
+    transform: scale(0.7) rotateX(30deg) rotateZ(-5deg);
+    filter: brightness(0.75) drop-shadow(0 12px 24px rgba(0,0,0,0.6));
+    border-radius: 8%;
+  }
+  75% {
+    transform: scale(0.9) rotateX(8deg) rotateZ(1deg);
+    filter: brightness(0.9) drop-shadow(0 16px 32px rgba(0,0,0,0.5));
+    border-radius: 4%;
+  }
+  100% {
+    transform: scale(1) rotateX(0deg) rotateZ(0deg);
+    filter: brightness(1) drop-shadow(0 20px 40px rgba(0,0,0,0.5));
+    border-radius: 3px;
+  }
+}
+
+/* Step 3: Crumple overlay fades out — reveals the flat paper */
+.envelope-container.is-open .crumple-overlay {
+  animation: overlay-flatten 1.6s ease-out 0.5s forwards;
+}
+
+@keyframes overlay-flatten {
+  0%   { opacity: 1; filter: none; }
+  40%  { opacity: 0.6; filter: blur(1px); }
+  100% { opacity: 0;   filter: blur(4px); }
+}
+
+/* Step 4: Text appears blurred (preview) */
+.envelope-container.is-open .letter-content {
+  opacity: 0.5;
+  filter: blur(2px);
+  transition-delay: 1s;
+}
+
+/* ═══════════════════════════════════════════════
+   READ STATE — Tap again to read the letter
+   ═══════════════════════════════════════════════ */
+.envelope-container.is-read .letter {
+  animation: none;
+  transform: scale(1.3) rotate(-1deg);
+  filter: drop-shadow(0 15px 20px rgba(0,0,0,0.6));
+  z-index: 20;
+  cursor: default;
+  border-radius: 3px;
+}
+
+.envelope-container.is-read .letter-content {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0px);
+  transition-delay: 0s;
+}
+
+.envelope-container.is-read .crumple-overlay {
+  opacity: 0 !important;
+}
+
+/* ── "Tap to unfold" label ── */
+.click-to-open-text {
+  position: absolute;
+  bottom: -60px;
+  width: 100%;
+  text-align: center;
+  color: #f6efe1;
+  font-size: 1.5rem;
+  opacity: 0.8;
+  transition: opacity 0.4s;
+}
+
+.envelope-container.is-open .click-to-open-text {
+  opacity: 0;
+}
